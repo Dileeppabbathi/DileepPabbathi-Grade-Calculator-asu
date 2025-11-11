@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Simple Grade Calculator</title>
+<style>
+  body { background:#0b0b10; color:#e8ebf2; font:500 15px/1.6 system-ui,Segoe UI,Inter,Arial; margin:0; }
+  .container { max-width:700px; margin:40px auto; padding:0 20px; }
+  h1 { font-weight:800; text-align:center; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; border-spacing:0; background:#111219; border-radius:12px; overflow:hidden; }
+  th,td { padding:12px 10px; border-bottom:1px solid #23253a; text-align:right; }
+  th { background:#14172a; font-weight:700; text-align:center; }
+  td:first-child,th:first-child { text-align:left; }
+  input { width:100%; padding:8px 10px; border-radius:8px; border:1px solid #2a2f46; background:#1a1b25; color:#e8ebf2; text-align:right; }
+  input:focus { outline:1px solid #6d7cff; }
+  .btn { margin:10px 5px; padding:10px 16px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+  .btn:hover { opacity:.9; transform:translateY(-1px); }
+  .add { background:#6d7cff; color:#fff; }
+  .clear { background:#2a2f46; color:#ccc; }
+  .result { margin-top:20px; text-align:center; font-size:18px; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Simple Weighted Grade Calculator</h1>
+  <table id="gradeTable">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Weight (%)</th>
+        <th>Scored</th>
+        <th>Out of</th>
+        <th>% in Category</th>
+        <th>Weighted %</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+    <tfoot>
+      <tr>
+        <td><b>Total</b></td>
+        <td id="weightSum">0%</td>
+        <td colspan="2"></td>
+        <td></td>
+        <td id="overall">0%</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+  <div style="text-align:center">
+    <button class="btn add" id="addRow">+ Add Row</button>
+    <button class="btn clear" id="clear">Clear All</button>
+  </div>
+  <div class="result">Weighted Total: <span id="final">0%</span></div>
+</div>
+
+<script>
+function makeRow(data={}) {
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+    <td><input placeholder="Assignments / Exam" value="${data.name||''}" style="text-align:left"></td>
+    <td><input type="number" min="0" placeholder="20" value="${data.weight||''}"></td>
+    <td><input type="number" min="0" placeholder="Score" value="${data.scored||''}"></td>
+    <td><input type="number" min="0" placeholder="Out of" value="${data.outof||''}"></td>
+    <td class="catPct">—</td>
+    <td class="weightedPct">—</td>
+    <td><button onclick="this.closest('tr').remove();calc()">🗑</button></td>`;
+  tr.querySelectorAll("input").forEach(i=>i.addEventListener("input",calc));
+  return tr;
+}
+
+function calc(){
+  const rows=[...document.querySelectorAll("#rows tr")];
+  let totalWeight=0, weightedSum=0;
+  rows.forEach(r=>{
+    const [nameI, wI, sI, oI]=r.querySelectorAll("input");
+    const weight=parseFloat(wI.value)||0;
+    const scored=parseFloat(sI.value)||0;
+    const outof=parseFloat(oI.value)||0;
+    const pct=(outof>0)?(scored/outof):0;
+    const weighted=pct*weight;
+    totalWeight+=weight;
+    weightedSum+=weighted;
+    r.querySelector(".catPct").textContent=outof? (pct*100).toFixed(2)+'%' : '—';
+    r.querySelector(".weightedPct").textContent=(weighted).toFixed(2)+'%';
+  });
+  document.getElementById("weightSum").textContent=totalWeight.toFixed(2)+'%';
+  const final=(totalWeight>0)?(weightedSum/totalWeight)*100:0;
+  document.getElementById("overall").textContent=weightedSum.toFixed(2)+'%';
+  document.getElementById("final").textContent=final.toFixed(2)+'%';
+}
+
+document.getElementById("addRow").addEventListener("click",()=>{
+  document.getElementById("rows").appendChild(makeRow());
+});
+document.getElementById("clear").addEventListener("click",()=>{
+  document.getElementById("rows").innerHTML="";
+  calc();
+});
+
+// Default rows
+["Assignments","Project","Exams","Participation"].forEach(n=>{
+  document.getElementById("rows").appendChild(makeRow({name:n}));
+});
+calc();
+</script>
+</body>
+</html>
